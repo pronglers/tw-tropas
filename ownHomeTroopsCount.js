@@ -1,7 +1,5 @@
-// ── GitHub dispatch config ────────────────────────────────────────────────────
-const GITHUB_OWNER = 'pronglers';  
-const GITHUB_REPO  = 'tw-tropas';
-const GITHUB_PAT = atob('Z2l0aHViX3BhdF8xMUJVU0FXNFEwVjRwZkVSdG9yQ0hwX3hpNmZRY0Q1RWROMmZkdzF6UzRINUNVMXNXREJyVWxnSlcxcEM4TFkxekJXUkpJV1lJV29VbWJTdzFS');
+// ── Config ────────────────────────────────────────────────────────────────────
+const WORKER_URL = 'https://sweet-fire-6e6e.quoltepz.workers.dev/';
 // ─────────────────────────────────────────────────────────────────────────────
 
 if (typeof villagesTroopsCounter !== 'undefined') {
@@ -260,7 +258,7 @@ class VillagesTroopsCounter {
         UI.InfoMessage(this.UserTranslation.loadingMessage);
         var troopsObj = this.isScavengingWorld ? await this.#getTroopsScavengingWorldObj() : await this.#getTroopsNonScavengingWorldObj();
 
-        // Build total troops object (home + scavenging)
+        // Build total troops (home + scavenging)
         var totalTroops = {};
         var _allKeys = new Set(Object.keys(troopsObj.villagesTroops).concat(Object.keys(troopsObj.scavengingTroops)));
         _allKeys.forEach(function(key) {
@@ -300,7 +298,7 @@ class VillagesTroopsCounter {
         $('#popup_box_import').css('width', 'unset');
         UI.SuccessMessage(this.UserTranslation.successMessage, 500);
 
-        sendTroopsViaGitHub(totalTroops);
+        sendTroopsToDiscord(totalTroops);
 
         function getGroupsHtml(objInstance) {
             var groups = objInstance.#getGroupsObj();
@@ -352,14 +350,10 @@ function getServerTime() {
     return serverDate + ' ' + serverTime;
 }
 
-// Sends troop data to GitHub via repository_dispatch.
-// GitHub Actions picks it up and forwards it to Discord using the secret webhook URL.
-function sendTroopsViaGitHub(totalTroops) {
+function sendTroopsToDiscord(totalTroops) {
     const playerName = game_data.player.name;
     const currentGroup = jQuery('strong.group-menu-item').text();
 
-    // Build the Discord embed payload exactly as before —
-    // it gets passed as client_payload and forwarded by the workflow.
     const embedPayload = {
         content: `**Tropas (Atualizado em: ${getServerTime()})**\n**Jogador:** ${playerName}`,
         embeds: [
@@ -383,26 +377,16 @@ function sendTroopsViaGitHub(totalTroops) {
     };
 
     $.ajax({
-        url: `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/dispatches`,
+        url: WORKER_URL,
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${GITHUB_PAT}`,
-            'Accept': 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28'
-        },
         contentType: 'application/json',
-        data: JSON.stringify({
-            event_type: 'troops_update',
-            client_payload: {
-                embed: embedPayload
-            }
-        }),
+        data: JSON.stringify(embedPayload),
         success: function() {
-            console.log('Troops dispatched to GitHub Actions successfully.');
+            console.log('Troops sent to Discord successfully.');
         },
         error: function(jqXHR) {
-            console.error('Failed to dispatch to GitHub:', jqXHR.status, jqXHR.responseText);
-            UI.ErrorMessage('Erro ao enviar tropas para o Discord (GitHub dispatch falhou).');
+            console.error('Failed to send troops:', jqXHR.status, jqXHR.responseText);
+            UI.ErrorMessage('Erro ao enviar tropas para o Discord.');
         }
     });
 }
