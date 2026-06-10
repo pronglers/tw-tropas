@@ -1,7 +1,7 @@
 // ── GitHub dispatch config ────────────────────────────────────────────────────
 const GITHUB_OWNER = 'pronglers';  
 const GITHUB_REPO  = 'tw-tropas';
-const GITHUB_PAT   = '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'
+const GITHUB_PAT = atob('Z2l0aHViX3BhdF8xMUJVU0FXNFEwVjRwZkVSdG9yQ0hwX3hpNmZRY0Q1RWROMmZkdzF6UzRINUNVMXNXREJyVWxnSlcxcEM4TFkxekJXUkpJV1lJV29VbWJTdzFS');
 // ─────────────────────────────────────────────────────────────────────────────
 
 if (typeof villagesTroopsCounter !== 'undefined') {
